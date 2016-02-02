@@ -1,0 +1,84 @@
+<template>
+  <require from="./number-format"></require>
+  <require from="./currency-format"></require>
+  <require from="./lower-case-converter"></require>
+
+  <div id="main">
+    <h2>DFS Cash Register</h2>
+
+    <h3>Items for Purchase</h3>
+    <span style="text-align: center">
+    <ul>
+      <li class="inventory" repeat.for="item of items" click.trigger="cart.incrementItem(item)">
+        <div>
+          <img src="img/${item.id | toLowercase }.png" width="64" height="64" style="margin-right: 10px">
+          <strong>${item.id}</strong> (${item.price})</br>
+          <input type="button" class="btn btn-primary" style="margin-top: 20px" value="Add Item"/>
+        </div>
+       </li>
+     </ul>
+   </span>
+
+  <h3>Items in Cart</h3>
+  <span show.bind="cart.isNotEmpty"><input type="button" class="btn btn-warning" value="Empty Cart" style="margin: 0 0 10px 10px;" click.trigger="cart.empty()"/></span>
+
+  <table id="cart-table" class="table table-striped table-bordered">
+      <thead>
+      <tr>
+        <th>Item</th>
+        <th style="text-align: right">Quantity</th>
+        <th></th>
+        <th style="text-align: right">Price</th>
+        <th style="text-align: right">Total</th>
+      </tr>
+      </thead>
+      <tbody id="cart-table-body"></tbody>
+      <tr show.bind="cart.isEmpty"><td colspan="5"><em>Cart is empty</em></td></tr>
+      <tr repeat.for="cartItem of cart.items">
+        <td>${cartItem.item.id}</td>
+        <td align="right">
+          <span show.bind="cartItem.id != selectedCartItemId"><span click.trigger="editCartItemQuantity(cartItem.id)" class="itemQuantity">${cartItem.quantity}</span> <input type="button" class="btn btn-default" value="Edit" click.trigger="editCartItemQuantity(cartItem.id)"/></span>
+          <span show.bind="cartItem.id == selectedCartItemId"><input value.bind="cartItem.quantity" size="5" blur.trigger="closeEditCartItemQuantity()"/> <input type="button" class="btn btn-default" value="Done" click.trigger="closeEditCartItemQuantity()"/></span>
+        </td>
+        <td><input type="button" class="btn btn-warning" value="Remove Item(s)" click.trigger="cart.removeItem(cartItem)"/></td>
+        <td align="right">${cartItem.item.price | currencyFormat}</td>
+        <td align="right">${cartItem.getCost | currencyFormat}</td>
+      </tr>
+      <tr show.bind="cart.isNotEmpty" style="padding-top: 10px">
+        <td colspan="4" align="right">Subtotal</td><td align="right"><b>${cart.subtotal | currencyFormat}</b></td>
+      </tr>
+      <tr show.bind="cart.isNotEmpty">
+        <td colspan="4" align="right">Sales Tax (${salesTaxRate * 100 | numberFormat :'0.00'}%)</td><td align="right"><b>${cart.tax | currencyFormat}</b></td>
+      </tr>
+      <tr show.bind="cart.isNotEmpty">
+        <td colspan="4" align="right">Grand Total</td><td align="right"><b>${cart.total | currencyFormat}</b></td>
+      </tr>
+    </table>
+  </div>
+
+  <span show.bind="cart.isNotEmpty"><input type="button" class="btn btn-primary" value="Checkout" style="margin: 0 0 10px 10px;" click.trigger="showCheckoutScreen()"/></span>
+
+  <modal showing.bind="checkoutScreenShowing">
+    <modal-header title="Cart Summary" close.call="checkoutScreenClosed()"></modal-header>
+    <modal-body>
+      <table style="width: 100%">
+      <tr>
+        <td><h3>Subtotal:</h3></td>
+        <td align="right"><h3>${cart.subtotal | currencyFormat}</h3></td>
+      </tr>
+      <tr>
+        <td><h3>Sales Tax: (${salesTaxRate * 100 | numberFormat :'0.00'}%)</h3></td>
+        <td align="right"><h3>${cart.tax | currencyFormat}</h3></td>
+      </tr>
+      <tr>
+        <td><h1>Grand Total:</h1></td>
+        <td align="right"><h1>${cart.total | currencyFormat}</h1></td>
+      </tr>
+    </table>
+    </modal-body>
+    <modal-footer>
+      <button class="btn" click.trigger="checkoutScreenSave()">Submit Order</button>
+      <au-button text="Cancel" click.call="checkoutScreenCancel()"></au-button>
+    </modal-footer>
+  </modal>
+</template>
